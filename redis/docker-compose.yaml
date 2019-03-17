@@ -1,0 +1,41 @@
+version: "2"
+
+services:
+  redis-master:
+    restart: always
+    container_name: redis-master
+    image: docker.io/redis 
+    ports:
+     - 8888:6379
+    volumes:
+     - ./conf:/usr/local/etc/redis
+     - ./slog:/slog
+    command: bash -c "redis-server /usr/local/etc/redis/redis-master.conf && echo start to run master-sentinel && redis-sentinel /usr/local/etc/redis/sentinel.master.conf"
+  redis-slave1:
+    restart: always
+    container_name: redis-slave1
+    image: docker.io/redis
+    ports:
+     - 8886:6379
+    command: bash -c "redis-server /usr/local/etc/redis/redis-slave1.conf && echo start to run slave1-sentinel && redis-sentinel /usr/local/etc/redis/sentinel.slave1.conf"
+    volumes:
+     - ./conf:/usr/local/etc/redis
+     - ./slog/:/slog/
+    links:
+     - redis-master
+    depends_on:
+     - redis-master
+  redis-slave2:
+    restart: always
+    container_name: redis-slave2
+    image: docker.io/redis
+    ports:
+     - 8887:6379
+    command: bash -c "redis-server /usr/local/etc/redis/redis-slave2.conf && echo start to run slave2-sentinel && redis-sentinel /usr/local/etc/redis/sentinel.slave2.conf"
+    volumes:
+     - ./conf:/usr/local/etc/redis
+     - ./slog/:/slog/
+    links:
+     - redis-master
+    depends_on:
+     - redis-master
