@@ -1,7 +1,7 @@
 # redis docker conf
 /redis/conf/
 # sentinel log file
-/redis/slog/
+/redis/slog/*.log
 
 # Binaries for programs and plugins
 *.exe
