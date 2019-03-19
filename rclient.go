@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	HeartbeatInterval    = 100 * time.Millisecond
-	RetryFindRedisMaster = 10
+	RedisHeartbeatInterval = 100 * time.Millisecond
+	RetryFindRedisMaster   = 10
 )
 
 var (
@@ -66,10 +66,10 @@ func ensureRedisMaster() {
 				if i == RetryFindRedisMaster-1 {
 					logrus.Errorf("redis cluster unstable now")
 				}
-				time.Sleep(HeartbeatInterval)
+				time.Sleep(RedisHeartbeatInterval)
 			}
 		}
-		time.Sleep(HeartbeatInterval)
+		time.Sleep(RedisHeartbeatInterval)
 	}
 }
 

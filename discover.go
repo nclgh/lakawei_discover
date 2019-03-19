@@ -1,30 +1,40 @@
 package lakawei_discover
 
 import (
+	"math"
 	"time"
-	"github.com/sirupsen/logrus"
+	"sync"
+	"strconv"
 	"github.com/go-redis/redis"
+	"github.com/sirupsen/logrus"
 	"github.com/nclgh/lakawei_discover/helper"
 )
 
+const (
+	ServiceHeartbeat = 500 * time.Millisecond
+
+	AliveAddrInterval = 2
+)
+
 type Service struct {
-	ServiceToken string
-	ServiceAddr  string
+	ServiceName string
+	ServiceAddr string
 }
 
 var (
-	service *Service
+	service  *Service
+	initOnce sync.Once
 )
 
-func Register(sToken string, addr string) {
-	initRedisClient()
+func Register(sName string, addr string) {
+	initOnce.Do(initRedisClient)
 
 	service = &Service{
-		ServiceToken: sToken,
-		ServiceAddr:  addr,
+		ServiceName: sName,
+		ServiceAddr: addr,
 	}
 
-	err := GetRedisClient().ZAdd(sToken, redis.Z{
+	err := GetRedisClient().ZAdd(sName, redis.Z{
 		Score:  float64(time.Now().Unix()),
 		Member: addr,
 	}).Err()
@@ -35,9 +45,27 @@ func Register(sToken string, addr string) {
 	go service.keepHeartbeat()
 }
 
-func (s *Service) Unregister() {
-	GetRedisClient().ZRem(s.ServiceToken, s.ServiceAddr)
-	logrus.Infof("exit service discover. server: %v, addr: %v", s.ServiceToken, s.ServiceAddr)
+func Unregister() {
+	GetRedisClient().ZRem(service.ServiceName, service.ServiceAddr)
+	logrus.Infof("exit service discover. server: %v, addr: %v", service.ServiceName, service.ServiceAddr)
+}
+
+func GetServiceAddr(sName string) ([]string) {
+	initOnce.Do(initRedisClient)
+	for i := 0; i < 3; i++ {
+		cli := GetRedisClient()
+		min := strconv.FormatInt(time.Now().Unix()-AliveAddrInterval, 10)
+		results, err := cli.ZRangeByScore(sName, redis.ZRangeBy{
+			Min: min, Max: "+inf", Offset: 0, Count: math.MaxInt64}).Result()
+		if err != nil {
+			logrus.Errorf("query redis service ip failed. err: %v", err)
+			time.Sleep(time.Second)
+			continue
+		}
+		return results
+	}
+	logrus.Errorf("service discover unstable")
+	return nil
 }
 
 func (s *Service) keepHeartbeat() {
@@ -47,13 +75,13 @@ func (s *Service) keepHeartbeat() {
 		s.keepHeartbeat()
 	})
 	for {
-		err := GetRedisClient().ZAdd(s.ServiceToken, redis.Z{
+		err := GetRedisClient().ZAdd(s.ServiceName, redis.Z{
 			Score:  float64(time.Now().Unix()),
 			Member: s.ServiceAddr,
 		}).Err()
 		if err != nil {
 			logrus.Errorf("heartbeat err: %", err)
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(ServiceHeartbeat)
 	}
 }
