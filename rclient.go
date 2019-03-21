@@ -33,7 +33,7 @@ func SetRedisClient(cli *redis.Client, addr string) {
 	defer mlock.Unlock()
 	discoverRedisClient = cli
 	masterAddr = addr
-	logrus.Infof("redis master switch to %v", addr)
+	logrus.Infof("discover redis master switch to %v", addr)
 }
 
 var (

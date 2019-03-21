@@ -13,7 +13,7 @@ var config *c
 
 func initConfig() {
 	config = &c{}
-	configor.New(&configor.Config{}).Load(config, "/opt/lakawei/config/config.yml")
+	configor.New(&configor.Config{}).Load(config, "/opt/lakawei/conf/discover/config.yml")
 }
 
 var once sync.Once

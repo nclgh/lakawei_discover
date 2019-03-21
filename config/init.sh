@@ -1,3 +1,3 @@
-rm -rf /opt/lakawei/config/*
-mkdir -p /opt/lakawei/config/
-cp ./config.yml /opt/lakawei/config/
+rm -rf /opt/lakawei/conf/discover/*
+mkdir -p /opt/lakawei/conf/discover/
+cp ./config.yml /opt/lakawei/conf/discover/
