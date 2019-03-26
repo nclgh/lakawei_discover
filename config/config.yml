@@ -1,3 +1,0 @@
-discoverRedisList: ["127.0.0.1:8888","127.0.0.1:8886","127.0.0.1:8887"]
-
-# discoverRedisList: ["redis-master:8888","redis-slave1:8886","redis-slave2:8887"]
