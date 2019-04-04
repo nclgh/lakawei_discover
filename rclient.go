@@ -33,7 +33,7 @@ func SetRedisClient(cli *redis.Client, addr string) {
 	defer mlock.Unlock()
 	discoverRedisClient = cli
 	masterAddr = addr
-	logrus.Infof("discover redis master switch to %v", addr)
+	logrus.Infof("discover redis master switch to %v at %v timestamp/ns", addr,time.Now().UnixNano())
 }
 
 var (
@@ -57,7 +57,7 @@ func ensureRedisMaster() {
 	for {
 		err := GetRedisClient().Ping().Err()
 		if err != nil {
-			logrus.Errorf("ping redis cli failed. addr: %v, err: %v", masterAddr, err)
+			logrus.Errorf("ping redis cli failed. addr: %v, at %s timestamp/ns, err: %v", masterAddr,time.Now().UnixNano(), err)
 			for i := 0; i < RetryFindRedisMaster; i++ {
 				err = findRedisMaster()
 				if err == nil {
